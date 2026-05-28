@@ -26,7 +26,7 @@ QFrame#headerBar {
 
 QLabel#windowTitle {
     color: #f4fbff;
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 700;
 }
 
@@ -71,8 +71,9 @@ QLabel#videoDisplay {
     background-color: #091626;
     border: 1px solid #1f9bd1;
     color: #78e5ff;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 600;
+    padding: 24px;
 }
 
 QWidget#statsPanel {
@@ -96,17 +97,45 @@ QLabel#cardValue {
     font-weight: 700;
 }
 
-QLineEdit#thresholdInput {
-    background-color: #071321;
-    border: 1px solid #26658f;
-    border-radius: 6px;
-    color: #e6fbff;
-    min-height: 32px;
-    padding: 4px 8px;
+QLabel#cardValue[metric="people"] {
+    font-size: 42px;
 }
 
-QLineEdit#thresholdInput:focus {
-    border-color: #22d3ee;
+QLabel#cardValue[metric="fps"] {
+    color: #7ce7ff;
+    font-size: 32px;
+}
+
+QLabel#cardValue[metric="mode"] {
+    font-size: 24px;
+}
+
+QLabel#cardValue[metric="status"] {
+    font-size: 24px;
+}
+
+QFrame#statsCard QLabel#cardValue {
+    min-height: 38px;
+}
+
+QLabel#cardValue[status="未开始"] {
+    color: #8bb9d6;
+}
+
+QLabel#cardValue[status="检测中"] {
+    color: #41e6ff;
+}
+
+QLabel#cardValue[status="已完成"] {
+    color: #5ee68c;
+}
+
+QLabel#cardValue[status="已停止"] {
+    color: #f5c542;
+}
+
+QLabel#cardValue[status="出错"] {
+    color: #ff6b6b;
 }
 
 QTableWidget#logTable {

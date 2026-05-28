@@ -1,6 +1,7 @@
 """中间画面显示组件模块。"""
 
 import cv2
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
@@ -19,7 +20,7 @@ class VideoWidget(QLabel):
         self.setObjectName("videoDisplay")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setMinimumSize(760, 480)
-        self.setText("请选择检测模式")
+        self.setText("请选择检测模式\n\n支持图片、视频与摄像头人数统计")
         self._current_pixmap: QPixmap | None = None
 
     def update_frame(self, frame) -> None:
@@ -36,7 +37,7 @@ class VideoWidget(QLabel):
         """显示当前选择的检测模式提示。"""
         self._current_pixmap = None
         self.clear()
-        self.setText(f"{mode_text}\n\nGUI 框架测试中，暂未接入检测功能")
+        self.setText(f"{mode_text}\n\n请稍候，检测画面将在此处显示")
 
     def show_bgr_image(self, image) -> None:
         """显示 OpenCV BGR 图片，并按控件大小等比缩放。"""
@@ -70,3 +71,13 @@ class VideoWidget(QLabel):
         )
         self.setText("")
         self.setPixmap(scaled_pixmap)
+
+    def has_frame(self) -> bool:
+        """判断当前是否已有可保存的检测画面。"""
+        return self._current_pixmap is not None and not self._current_pixmap.isNull()
+
+    def save_current_frame(self, output_path: str | Path) -> bool:
+        """保存当前中间画面截图。"""
+        if not self.has_frame() or self._current_pixmap is None:
+            return False
+        return self._current_pixmap.save(str(output_path))

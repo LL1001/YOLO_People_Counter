@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import QSS_DIR
+from config import QSS_DIR, RESULT_SCREENSHOTS_DIR
 from core.detector import ModelLoadError
 from core.image_processor import ImageProcessor
 from threads.camera_thread import CameraThread
@@ -23,6 +23,7 @@ from threads.video_thread import VideoThread
 from ui.log_table import LogTable
 from ui.stats_panel import StatsPanel
 from ui.video_widget import VideoWidget
+from utils.file_utils import ensure_dir, generate_timestamp_filename
 
 
 class MainWindow(QMainWindow):
@@ -75,7 +76,7 @@ class MainWindow(QMainWindow):
 
         title = QLabel("AI人数统计与智能监测系统")
         title.setObjectName("windowTitle")
-        subtitle = QLabel("Phase 2 GUI Preview")
+        subtitle = QLabel("课程作业展示版")
         subtitle.setObjectName("windowSubtitle")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
@@ -118,7 +119,6 @@ class MainWindow(QMainWindow):
             ("摄像头检测", "摄像头检测"),
             ("停止检测", "停止检测"),
             ("保存截图", "保存截图"),
-            ("导出 CSV", "导出 CSV"),
         ]
         for text, mode in buttons:
             button = QPushButton(text)
@@ -131,6 +131,8 @@ class MainWindow(QMainWindow):
                 button.clicked.connect(self._handle_camera_detection)
             elif mode == "停止检测":
                 button.clicked.connect(self._handle_stop_detection)
+            elif mode == "保存截图":
+                button.clicked.connect(self._handle_save_screenshot)
             else:
                 button.clicked.connect(lambda checked=False, mode_text=mode: self._handle_nav_click(mode_text))
             nav_layout.addWidget(button)
@@ -139,22 +141,12 @@ class MainWindow(QMainWindow):
         return nav
 
     def _handle_nav_click(self, mode_text: str) -> None:
-        """处理按钮点击事件，仅写入测试日志。"""
+        """处理保留入口的通用提示。"""
         self.current_mode = mode_text
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         self.stats_panel.update_mode(mode_text)
         self.stats_panel.update_stats(0, 0.0)
-        self.stats_panel.update_alert_status("测试")
+        self.stats_panel.update_detection_status("未开始")
         self.video_widget.show_mode_hint(mode_text)
-        self.log_table.add_log(
-            time_text=now,
-            mode=mode_text,
-            people_count=0,
-            fps=0.0,
-            status="测试日志：GUI 按钮已点击",
-            result_path="-",
-        )
 
     def _handle_image_detection(self) -> None:
         """处理图片检测按钮点击事件。"""
@@ -173,44 +165,40 @@ class MainWindow(QMainWindow):
 
         self.current_mode = "图片检测"
         self.stats_panel.update_mode("图片检测")
-        self.stats_panel.update_alert_status("检测中")
+        self.stats_panel.update_detection_status("检测中")
 
         try:
             result = self.image_processor.process_image(image_path)
         except ModelLoadError as exc:
-            self._show_error("模型加载失败", str(exc), "图片检测失败：模型不可用")
+            self._show_error("模型加载失败", str(exc), "图片检测")
             return
         except Exception as exc:
-            self._show_error("图片检测失败", str(exc), "图片检测失败：处理异常")
+            self._show_error("图片检测失败", str(exc), "图片检测")
             return
 
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.video_widget.show_bgr_image(result.annotated_image)
         self.stats_panel.update_stats(result.people_count, result.fps)
         self.stats_panel.update_mode("图片检测")
-        self.stats_panel.update_alert_status("正常")
-        self.log_table.add_log(
-            time_text=now,
+        self.stats_panel.update_detection_status("已完成")
+        self._add_log(
             mode="图片检测",
             people_count=result.people_count,
             fps=result.fps,
-            status="检测完成",
+            status="图片检测完成",
             result_path=str(result.output_path),
         )
 
-    def _show_error(self, title: str, message: str, log_status: str) -> None:
+    def _show_error(self, title: str, message: str, mode: str) -> None:
         """弹窗提示异常，并同步写入日志表格。"""
         QMessageBox.warning(self, title, message)
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.stats_panel.update_mode("图片检测")
+        self.stats_panel.update_mode(mode)
         self.stats_panel.update_stats(0, 0.0)
-        self.stats_panel.update_alert_status("正常")
-        self.log_table.add_log(
-            time_text=now,
-            mode="图片检测",
+        self.stats_panel.update_detection_status("出错")
+        self._add_log(
+            mode=mode,
             people_count=0,
             fps=0.0,
-            status=log_status,
+            status="检测出错",
             result_path="-",
         )
 
@@ -235,7 +223,7 @@ class MainWindow(QMainWindow):
         self.current_mode = "视频检测"
         self.stats_panel.update_mode("视频检测")
         self.stats_panel.update_stats(0, 0.0)
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status("检测中")
         self.video_widget.show_mode_hint("视频检测")
 
         self.video_thread = VideoThread(video_path)
@@ -255,39 +243,45 @@ class MainWindow(QMainWindow):
     def _handle_stop_detection(self) -> None:
         """处理停止检测按钮点击事件。"""
         if self._is_video_running() and self.video_thread is not None:
-            self.stats_panel.update_alert_status("停止中")
+            self.stats_panel.update_detection_status("已停止")
             self.video_thread.stop()
             return
         if self._is_camera_running() and self.camera_thread is not None:
-            self.stats_panel.update_alert_status("停止中")
+            self.stats_panel.update_detection_status("已停止")
             self.camera_thread.stop()
             return
 
-        self._handle_nav_click("停止检测")
+        QMessageBox.information(self, "提示", "当前没有正在运行的检测任务。")
 
     def _update_video_frame(self, frame, people_count: int, fps: float) -> None:
         """接收视频线程结果并刷新 GUI。"""
         self.video_widget.show_bgr_image(frame)
         self.stats_panel.update_stats(people_count, fps)
         self.stats_panel.update_mode("视频检测")
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status("检测中")
 
     def _handle_video_error(self, message: str) -> None:
         """处理视频线程异常提示。"""
         QMessageBox.warning(self, "视频检测失败", message)
+        self.stats_panel.update_detection_status("出错")
 
     def _handle_video_finished(self, status: str, result_path: str, people_count: int, fps: float) -> None:
         """视频线程结束后写入日志并清理线程引用。"""
         status_text_map = {
             "completed": "视频检测完成",
             "stopped": "视频检测停止",
-            "error": "视频检测异常",
+            "error": "检测出错",
         }
         status_text = status_text_map.get(status, "视频检测结束")
+        detection_status_map = {
+            "completed": "已完成",
+            "stopped": "已停止",
+            "error": "出错",
+        }
 
         self.stats_panel.update_stats(people_count, fps)
         self.stats_panel.update_mode("视频检测")
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status(detection_status_map.get(status, "已完成"))
         self._add_log(
             mode="视频检测",
             people_count=people_count,
@@ -312,7 +306,7 @@ class MainWindow(QMainWindow):
         self.current_mode = "摄像头检测"
         self.stats_panel.update_mode("摄像头检测")
         self.stats_panel.update_stats(0, 0.0)
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status("检测中")
         self.video_widget.show_mode_hint("摄像头检测")
 
         self.camera_thread = CameraThread(camera_index=0)
@@ -334,24 +328,30 @@ class MainWindow(QMainWindow):
         self.video_widget.show_bgr_image(frame)
         self.stats_panel.update_stats(people_count, fps)
         self.stats_panel.update_mode("摄像头检测")
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status("检测中")
 
     def _handle_camera_error(self, message: str) -> None:
         """处理摄像头线程异常提示。"""
         QMessageBox.warning(self, "摄像头检测失败", message)
+        self.stats_panel.update_detection_status("出错")
 
     def _handle_camera_finished(self, status: str, people_count: int, fps: float) -> None:
         """摄像头线程结束后写入日志并清理线程引用。"""
         status_text_map = {
             "stopped": "摄像头检测停止",
             "open_failed": "摄像头打开失败",
-            "error": "摄像头检测异常",
+            "error": "检测出错",
         }
         status_text = status_text_map.get(status, "摄像头检测停止")
+        detection_status_map = {
+            "stopped": "已停止",
+            "open_failed": "出错",
+            "error": "出错",
+        }
 
         self.stats_panel.update_stats(people_count, fps)
         self.stats_panel.update_mode("摄像头检测")
-        self.stats_panel.update_alert_status("正常")
+        self.stats_panel.update_detection_status(detection_status_map.get(status, "已停止"))
         self._add_log(
             mode="摄像头检测",
             people_count=people_count,
@@ -363,6 +363,27 @@ class MainWindow(QMainWindow):
         if self.camera_thread is not None:
             self.camera_thread.deleteLater()
             self.camera_thread = None
+
+    def _handle_save_screenshot(self) -> None:
+        """保存当前中间画面到 results/screenshots。"""
+        if not self.video_widget.has_frame():
+            QMessageBox.information(self, "提示", "当前没有可保存的检测画面。")
+            return
+
+        output_dir = ensure_dir(RESULT_SCREENSHOTS_DIR)
+        output_path = output_dir / generate_timestamp_filename("screenshot", ".png")
+        if not self.video_widget.save_current_frame(output_path):
+            self._show_error("保存截图失败", "当前画面保存失败，请稍后重试。", self.current_mode)
+            return
+
+        QMessageBox.information(self, "保存成功", f"截图已保存：\n{output_path}")
+        self._add_log(
+            mode=self.current_mode,
+            people_count=int(self.stats_panel.people_value.text()),
+            fps=float(self.stats_panel.fps_value.text()),
+            status="截图保存成功",
+            result_path=str(output_path),
+        )
 
     def _is_video_running(self) -> bool:
         """判断视频检测线程是否正在运行。"""

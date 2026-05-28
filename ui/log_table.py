@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTab
 class LogTable(QTableWidget):
     """检测操作日志表格。
 
-    Phase 2 中按钮点击只写入测试日志，不保存真实检测结果。
+    Phase 6 只记录课程展示所需的关键检测事件。
     """
 
     HEADERS = ["时间", "模式", "人数", "FPS", "状态", "结果路径"]
