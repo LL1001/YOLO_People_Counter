@@ -1,0 +1,10 @@
+/* 深色主题占位样式，后续阶段完善界面细节。 */
+QMainWindow {
+    background-color: #202124;
+    color: #f1f3f4;
+}
+
+QWidget {
+    font-family: "Microsoft YaHei";
+    font-size: 14px;
+}
