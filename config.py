@@ -44,17 +44,3 @@ RESULT_CSV_DIR = RESULTS_DIR / "csv"
 DEMO_DIR = BASE_DIR / "demo"
 DEMO_IMAGES_DIR = DEMO_DIR / "images"
 DEMO_VIDEOS_DIR = DEMO_DIR / "videos"
-
-# 标准教室演示图片路径，需要手动放置 classroom_standard.jpg。
-DEMO_CLASSROOM_IMAGE_PATH = DEMO_IMAGES_DIR / "classroom_standard.jpg"
-
-# 教室每排座位区域配置，坐标基于 classroom_standard.jpg 的画面尺寸。
-# 使用 tools/row_calibrator.py 辅助框选 area 后，再手动填写 capacity。
-CLASSROOM_ROWS = [
-    # 示例：
-    # {
-    #     "name": "第1排",
-    #     "area": (100, 220, 1120, 300),
-    #     "capacity": 8,
-    # },
-]
