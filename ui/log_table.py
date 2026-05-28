@@ -1,19 +1,49 @@
-"""日志表格模块。"""
+"""底部日志表格模块。"""
 
-from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTableWidgetItem
 
 
 class LogTable(QTableWidget):
-    """检测日志表格占位类。"""
+    """检测操作日志表格。
+
+    Phase 2 中按钮点击只写入测试日志，不保存真实检测结果。
+    """
+
+    HEADERS = ["时间", "模式", "人数", "FPS", "状态", "结果路径"]
 
     def __init__(self) -> None:
         """初始化日志表格。"""
-        super().__init__(0, 4)
-        self.setHorizontalHeaderLabels(["时间", "来源", "人数", "备注"])
+        super().__init__(0, len(self.HEADERS))
+        self.setObjectName("logTable")
+        self.setHorizontalHeaderLabels(self.HEADERS)
+        self.setAlternatingRowColors(True)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.verticalHeader().setVisible(False)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-    def add_log(self, time_text: str, source: str, people_count: int, note: str = "") -> None:
-        """添加日志占位方法。
+    def add_log(
+        self,
+        time_text: str,
+        mode: str,
+        people_count: int,
+        fps: float,
+        status: str,
+        result_path: str = "-",
+    ) -> None:
+        """添加一条检测操作日志。"""
+        row = self.rowCount()
+        self.insertRow(row)
 
-        Phase 1 暂不填充表格数据，后续阶段实现。
-        """
-        _ = (time_text, source, people_count, note)
+        values = [
+            time_text,
+            mode,
+            str(people_count),
+            f"{fps:.2f}",
+            status,
+            result_path,
+        ]
+        for column, value in enumerate(values):
+            self.setItem(row, column, QTableWidgetItem(value))
+
+        self.scrollToBottom()

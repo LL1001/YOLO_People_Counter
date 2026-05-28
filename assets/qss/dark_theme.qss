@@ -1,10 +1,147 @@
-/* 深色主题占位样式，后续阶段完善界面细节。 */
+/* 深色科技风主题样式。 */
 QMainWindow {
-    background-color: #202124;
-    color: #f1f3f4;
+    background-color: #08111f;
+    color: #d8f3ff;
 }
 
-QWidget {
+QWidget#rootWidget {
+    background-color: #08111f;
+    color: #d8f3ff;
     font-family: "Microsoft YaHei";
     font-size: 14px;
+}
+
+QFrame#headerBar,
+QFrame#navPanel,
+QFrame#statsCard,
+QLabel#videoDisplay {
+    background-color: #101d2f;
+    border: 1px solid #1d9bf0;
+    border-radius: 8px;
+}
+
+QFrame#headerBar {
+    border-color: #18d7ff;
+}
+
+QLabel#windowTitle {
+    color: #f4fbff;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QLabel#windowSubtitle {
+    color: #53d6ff;
+    font-size: 13px;
+}
+
+QFrame#navPanel {
+    background-color: #0c1728;
+}
+
+QLabel#navTitle {
+    color: #7ce7ff;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 4px 2px 10px 2px;
+}
+
+QPushButton#navButton {
+    background-color: #12243a;
+    border: 1px solid #235982;
+    border-radius: 8px;
+    color: #d8f3ff;
+    min-height: 42px;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+QPushButton#navButton:hover {
+    background-color: #123452;
+    border-color: #22d3ee;
+    color: #ffffff;
+}
+
+QPushButton#navButton:pressed {
+    background-color: #0ea5e9;
+    color: #03111f;
+}
+
+QLabel#videoDisplay {
+    background-color: #091626;
+    border: 1px solid #1f9bd1;
+    color: #78e5ff;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QWidget#statsPanel {
+    min-width: 230px;
+    max-width: 280px;
+}
+
+QFrame#statsCard {
+    background-color: #0d1b2e;
+    border-color: #245f88;
+}
+
+QLabel#cardTitle {
+    color: #8bb9d6;
+    font-size: 13px;
+}
+
+QLabel#cardValue {
+    color: #41e6ff;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+QLineEdit#thresholdInput {
+    background-color: #071321;
+    border: 1px solid #26658f;
+    border-radius: 6px;
+    color: #e6fbff;
+    min-height: 32px;
+    padding: 4px 8px;
+}
+
+QLineEdit#thresholdInput:focus {
+    border-color: #22d3ee;
+}
+
+QTableWidget#logTable {
+    background-color: #0b1626;
+    alternate-background-color: #0f2034;
+    border: 1px solid #235982;
+    border-radius: 8px;
+    color: #d8f3ff;
+    gridline-color: #1b3856;
+    min-height: 180px;
+    selection-background-color: #0e7490;
+    selection-color: #ffffff;
+}
+
+QTableWidget#logTable::item {
+    padding: 6px;
+}
+
+QHeaderView::section {
+    background-color: #112842;
+    border: none;
+    border-right: 1px solid #1b3856;
+    color: #7ce7ff;
+    font-weight: 700;
+    min-height: 34px;
+    padding: 6px;
+}
+
+QScrollBar:vertical {
+    background-color: #091626;
+    border: none;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #1f9bd1;
+    border-radius: 5px;
 }
