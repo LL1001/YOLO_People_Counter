@@ -28,3 +28,6 @@ models/.msc
 models/.mv
 models/configuration.json
 models/README.md
+
+# 标准教室 demo 图片由使用者本地手动放置，不提交到仓库。
+demo/images/classroom_standard.jpg

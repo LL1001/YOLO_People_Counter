@@ -12,6 +12,7 @@ YOLO_People_Counter 是一个基于 YOLOv8n 的实时人数统计课程展示项
 - 科技风 GUI：左侧功能导航，中间大画面显示，右侧统计卡片，底部关键事件日志。
 - 检测状态显示：支持未开始、检测中、已完成、已停止、出错等状态。
 - 保存截图：可将当前中间画面保存到 `results/screenshots/`。
+- 标准教室 demo 支持：可手动放置固定教室图片，并使用辅助工具标定每排座位区域。
 - 稳定性增强：模型缺失、视频读取失败、摄像头打开失败等情况会给出友好提示。
 
 ## 技术栈
@@ -53,6 +54,8 @@ YOLO_People_Counter/
 ├── threads/
 │   ├── video_thread.py        # 视频检测线程
 │   └── camera_thread.py       # 摄像头检测线程
+├── tools/
+│   └── row_calibrator.py      # 教室座位排区域标定辅助工具
 ├── utils/
 │   ├── draw_utils.py          # 检测框绘制
 │   ├── file_utils.py          # 文件和时间戳工具
@@ -62,7 +65,7 @@ YOLO_People_Counter/
 │   ├── videos/                # 视频检测结果
 │   └── screenshots/           # 手动保存截图
 └── demo/
-    ├── images/                # 演示图片
+    ├── images/                # 演示图片，可放 classroom_standard.jpg
     └── videos/                # 演示视频
 ```
 
@@ -99,6 +102,82 @@ models/yolov8n.pt
 5. 点击“保存截图”，将当前中间画面保存到 `results/screenshots/`。
 
 同一时间只允许一种实时检测模式运行，避免视频和摄像头同时占用资源。
+
+## 标准教室 Demo 图片
+
+为了方便课程作业展示，可以准备一张固定教室视角图片作为标准样例。
+
+放置方式：
+
+1. 将标准教室图片命名为 `classroom_standard.jpg`。
+2. 将图片放入 `demo/images/` 目录。
+3. 最终路径应为：
+
+```text
+demo/images/classroom_standard.jpg
+```
+
+项目中已在 [config.py](config.py) 提供路径配置：
+
+```python
+DEMO_CLASSROOM_IMAGE_PATH = DEMO_IMAGES_DIR / "classroom_standard.jpg"
+```
+
+如果该图片不存在，主程序不会报错；需要使用教室展示或座位区域标定时，再手动添加即可。
+
+## 座位区域配置
+
+固定教室画面中的每一排座位区域可在 [config.py](config.py) 的 `CLASSROOM_ROWS` 中配置。坐标必须基于 `demo/images/classroom_standard.jpg` 的画面尺寸。
+
+示例：
+
+```python
+CLASSROOM_ROWS = [
+    {
+        "name": "第1排",
+        "area": (100, 220, 1120, 300),
+        "capacity": 8,
+    },
+    {
+        "name": "第2排",
+        "area": (90, 320, 1130, 410),
+        "capacity": 8,
+    },
+]
+```
+
+说明：
+
+- `area` 表示该排座位区域的矩形坐标 `(x1, y1, x2, y2)`。
+- `capacity` 需要根据实际教室每一排座位数量手动修改。
+- 如果更换标准教室图片，或图片分辨率发生变化，需要重新调整 `CLASSROOM_ROWS` 坐标。
+
+## 座位区域标定工具
+
+项目提供一个简单的 OpenCV 标定辅助工具，仅用于开发和配置，不集成到主 GUI。
+
+注意：该工具会打开 OpenCV 图形窗口，需要在本地 Windows 桌面环境运行。不要在无图形界面的远程环境、自动化环境或 Codex 工具环境中运行该脚本。
+
+运行方式：
+
+```bash
+python tools/row_calibrator.py
+```
+
+使用方式：
+
+1. 工具会打开 `demo/images/classroom_standard.jpg`。
+2. 鼠标左键拖拽矩形，框选每一排座位区域。
+3. 每次拖拽完成后，终端会输出该矩形坐标：`(x1, y1, x2, y2)`。
+4. 支持连续框选多排座位。
+5. 按 `s` 键输出 `CLASSROOM_ROWS` 示例格式。
+6. 按 `q` 键退出标定工具。
+
+如果 demo 图片不存在，工具会在终端给出友好提示：
+
+```text
+请手动将图片命名为 classroom_standard.jpg，并放入 demo/images/ 目录。
+```
 
 ## 打包为 exe
 
