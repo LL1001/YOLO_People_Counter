@@ -9,3 +9,22 @@ env/
 build/
 dist/
 *.spec
+
+# 运行生成结果，只保留目录占位文件。
+results/images/*
+!results/images/.gitkeep
+results/videos/*
+!results/videos/.gitkeep
+results/screenshots/*
+!results/screenshots/.gitkeep
+results/csv/*
+!results/csv/.gitkeep
+results/ultralytics/
+
+# 默认仅提交 YOLOv8n，其他模型可按需本地放置。
+models/yolov8*.pt
+!models/yolov8n.pt
+models/.msc
+models/.mv
+models/configuration.json
+models/README.md
